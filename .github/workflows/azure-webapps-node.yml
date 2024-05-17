@@ -1,0 +1,99 @@
+CREATE TABLE Categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE Laws (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    category_id INT,
+    full_text TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES Categories(id)
+);
+
+CREATE TABLE Procedures (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    law_id INT,
+    step_number INT,
+    description TEXT,
+    form_link VARCHAR(255),
+    FOREIGN KEY (law_id) REFERENCES Laws(id)
+);
+
+CREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Bookmarks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    law_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id),
+    FOREIGN KEY (law_id) REFERENCES Laws(id)
+);
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+
+const categories = []; // Example data store
+
+// Categories Endpoints
+app.get('/categories', (req, res) => {
+    res.json(categories);
+});
+
+app.get('/categories/:id', (req, res) => {
+    const category = categories.find(c => c.id === parseInt(req.params.id));
+    if (category) {
+        res.json(category);
+    } else {
+        res.status(404).send('Category not found');
+    }
+});
+
+app.post('/categories', (req, res) => {
+    const category = { id: categories.length + 1, name: req.body.name, description: req.body.description };
+    categories.push(category);
+    res.status(201).json(category);
+});
+
+// Similar endpoints for laws, procedures, users, bookmarks
+
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function Categories() {
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        axios.get('/api/categories')
+            .then(response => setCategories(response.data))
+            .catch(error => console.error('Error fetching categories:', error));
+    }, []);
+
+    return (
+        <div>
+            <h1>Categories</h1>
+            <ul>
+                {categories.map(category => (
+                    <li key={category.id}>{category.name}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+export default Categories;
